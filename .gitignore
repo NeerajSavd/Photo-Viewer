@@ -1,0 +1,6 @@
+.venv
+output/
+Test Data/
+__pycache__
+.env
+folders.txt
