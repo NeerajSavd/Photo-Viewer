@@ -148,6 +148,26 @@ def query_tags(conn, tags):
             """, (*tags, len(tags)))
     return c.fetchall()
 
+def get_metadata(conn, image_path):
+    c = conn.cursor()
+    c.execute("""
+            SELECT images.timestamp, images.latitude, images.longitude, images.camera_model, tags.tag FROM tags
+            JOIN images ON tags.id = images.id
+            WHERE images.filepath = ?
+        """, (image_path,))
+    metadata = c.fetchall()
+    details = {}
+    for row in metadata:
+        if len(details) == 0:
+            details["timestamp"] = row[0]
+            details["latitude"] = row[1]
+            details["longitude"] = row[2]
+            details["camera_model"] = row[3]
+            details["tags"] = [row[4]]
+        else:
+            details["tags"].append(row[4])
+    return details
+
 if __name__ == "__main__":
     debug_print_database(db_path)
     conn = init_db()
