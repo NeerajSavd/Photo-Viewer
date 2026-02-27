@@ -1,0 +1,263 @@
+* {
+  margin: 0;
+}
+
+.app-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #0f0f0f;
+  color: #ffffff;
+  font-family: sans-serif;
+}
+
+.sidebar {
+  width: 300px;
+  background-color: #1e1e1e;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.details-panel {
+  width: 300px;
+  background-color: #1e1e1e;
+  padding: 20px;
+  overflow-y: auto;
+  border-left: 1px solid #333;
+  transition: width 0.3s ease;
+}
+
+.details-panel.collapsed {
+  width: 50px;
+  padding: 10px;
+}
+
+.details-panel.collapsed .details-header {
+  display: none;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.btn-toggle-details {
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+.btn-toggle-details:hover {
+  color: #fff;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  background-color: #2b2b2b;
+  color: white;
+}
+
+.btn-primary {
+  background-color: #1e2a56;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.btn-primary:hover { background-color: #2a3a6b; }
+
+.btn-secondary {
+  background-color: #2a3a6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+.btn-secondary:hover { background-color: #3a4a7b; }
+
+.btn-nav {
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-nav:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-details {
+  width: 100%;
+  background-color: #1e2a56;
+  color: white;
+  border: none;
+  padding: 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.page-title {
+  text-align: center;
+  font-size: 2.5rem;
+  padding: 20px 0;
+  margin-bottom: 20px;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.image-card {
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.image-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.image-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pagination-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.pagination .page-info {
+  font-size: 0.9rem;
+  color: #888;
+  font-weight: 500;
+}
+
+.pagination .btn-nav {
+  background-color: #2a3a6b;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.pagination .btn-nav:hover:not(:disabled) {
+  background-color: #3a4a7b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pagination .btn-nav:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.pagination .btn-nav:disabled {
+  background-color: #333;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.pagination .btn-back {
+  background-color: #1e2a56;
+}
+
+.pagination .btn-back:hover {
+  background-color: #2a3a6b;
+}
+
+.info-box {
+  background-color: #1e2a56;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.detail-item {
+  margin-bottom: 15px;
+  word-break: break-all;
+}
+
+code {
+  display: block;
+  background-color: #2b2b2b;
+  padding: 5px;
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.file-path-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-copy {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-copy:hover {
+  color: #fff;
+  background-color: #333;
+}
+
+.btn-copy:active {
+  transform: scale(0.95);
+}

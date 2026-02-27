@@ -3,7 +3,8 @@ import json
 import tqdm
 from concurrent.futures import ThreadPoolExecutor
 from analysis import query, get_metadata
-from database import init_db, check_image_exists, insert_image, insert_tags
+from database.database import init_db
+from database.operations import check_image_exists, insert_image, insert_tags
 from dotenv import load_dotenv
 import time
 

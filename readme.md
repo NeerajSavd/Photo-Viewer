@@ -45,6 +45,11 @@ streamlit run src/photos_streamlit.py
 ```
 Then open your browser to `http://localhost:8501`
 
+```bash
+cd frontend
+npm run start
+```
+
 ## Project Structure
 ```
 src/
