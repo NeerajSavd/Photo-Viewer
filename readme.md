@@ -15,13 +15,13 @@ A photo library application with advanced search capabilities using AI-powered i
 
 - **Backend**: Python with SQLite database
 - **AI Integration**: LLM for intelligent image tagging
-- **Frontend**: Streamlit for web-based application
+- **Frontend**: Vue.js for web-based application
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.13
 - Required packages (see requirements.txt)
 
 ### Setup
@@ -40,27 +40,15 @@ DB_PATH=path/to/your/database.db
 3. Add image folders to `folders.txt`
 
 ## Running the Application
+
+1. Run the backend:
 ```bash
-streamlit run src/photos_streamlit.py
+cd src && python app.py
 ```
-Then open your browser to `http://localhost:8501`
 
+2. Run the frontend:
 ```bash
-cd frontend
-npm run start
-```
-
-## Project Structure
-```
-src/
-├── photos_streamlit.py    # Streamlit web application
-├── search.py              # Search functionality
-├── image_tagging.py       # Image analysis and tagging
-├── analysis.py            # Image metadata extraction
-└── database.py            # Database operations
-
-Test Data/                 # Sample images for testing
-output/                    # Generated files
+cd frontend && npm run dev
 ```
 
 ## TODO

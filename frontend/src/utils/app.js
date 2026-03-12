@@ -8,6 +8,7 @@ const searchQuery = ref('')
 const city = ref('')
 const dateStart = ref('')
 const dateEnd = ref('')
+const showMore = ref(false)
 const isSearching = ref(false)
 const loading = ref(false)
 
@@ -18,7 +19,7 @@ const IMAGES_PER_PAGE = 20
 
 const currentImage = ref(null)
 const currentDetails = ref({})
-const showDetails = ref(true)
+const showDetails = ref(false)
 
 // Computed
 const totalPages = computed(() => Math.ceil(images.value.length / IMAGES_PER_PAGE))
@@ -28,7 +29,7 @@ const paginatedImages = computed(() => {
 })
 
 // Methods
-const getImageUrl = (path) => `${API_BASE}/image?path=${encodeURIComponent(path)}`
+const getImageUrl = (path, size = 'thumb') => `${API_BASE}/image?path=${encodeURIComponent(path)}&size=${size}`
 
 const loadOnThisDay = async () => {
   try {
@@ -74,10 +75,14 @@ const loadDetails = async (imgPath) => {
   }
 }
 
+const closeModal = () => {
+  showDetails.value = false
+  currentImage.value = null
+}
+
 const copyFilePath = async () => {
   try {
     await copyToClipboard(currentImage.value)
-    // You could add a toast notification here
   } catch (err) {
     console.error("Failed to copy:", err)
   }
@@ -94,6 +99,7 @@ export {
   city,
   dateStart,
   dateEnd,
+  showMore,
   isSearching,
   loading,
   images,
@@ -109,6 +115,7 @@ export {
   loadOnThisDay,
   performSearch,
   loadDetails,
+  closeModal,
   copyFilePath,
   setupApp
 }

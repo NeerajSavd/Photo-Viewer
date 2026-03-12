@@ -42,14 +42,18 @@ def api_details(path: str):
     return {"data": details}
 
 @app.get("/api/image")
-def get_image(path: str):
+def get_image(path: str, size: Optional[str] = "thumb"):
     if not os.path.exists(path):
         return {"error": "File not found"}
 
     try:
         with Image.open(path) as img:
             img = ImageOps.exif_transpose(img)
-            img.thumbnail((400, 400))
+            if size == "full":
+                img.thumbnail((1920, 1920))
+            else:
+                img.thumbnail((500, 500))
+            
             if img.mode != "RGB":
                 img = img.convert("RGB")
             
