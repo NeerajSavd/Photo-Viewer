@@ -2,23 +2,23 @@
   <div class="app-layout">
     <aside class="sidebar">
       <nav class="sidebar-nav">
-        <a href="#" class="nav-item" @click.prevent="isSearching = false">
+        <a href="#" class="nav-item" @click.prevent="currentPage = 'onThisDay'">
           <i class="fa fa-calendar nav-icon"></i>
           <span class="nav-text">On This Day</span>
         </a>
-        <a href="#" class="nav-item" @click.prevent="isSearching = true">
+        <a href="#" class="nav-item" @click.prevent="currentPage = 'search'">
           <i class="fa fa-search nav-icon"></i>
           <span class="nav-text">Search</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-item" @click.prevent="currentPage = 'recent'">
           <i class="fa fa-folder nav-icon"></i>
           <span class="nav-text">Recent</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-item" @click.prevent="currentPage = 'map'">
           <i class="fa fa-map nav-icon"></i>
           <span class="nav-text">Map</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="#" class="nav-item" @click.prevent="currentPage = 'stats'">
           <i class="fa fa-bar-chart nav-icon"></i>
           <span class="nav-text">Stats</span>
         </a>
@@ -42,17 +42,16 @@
         <input v-model="dateEnd" type="date" />
       </div>
 
-      <h1 class="page-title">{{ isSearching ? 'Search Results' : 'On This Day' }}</h1>
-
       <div v-if="loading" class="loader">Loading...</div>
 
-      <div v-else-if="isSearching">
+      <div v-else-if="currentPage === 'search'">
+        <h1 class="page-title">Search Results</h1>
         <div v-if="images.length === 0" class="info-box">
           No images found for your search.
         </div>
         <div v-else>
           <div class="pagination">
-            <button @click="isSearching = false" class="btn-nav btn-back">
+            <button @click="currentPage = 'onThisDay'" class="btn-nav btn-back">
               <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 18l-6-6 6-6"/>
               </svg>
@@ -83,7 +82,8 @@
         </div>
       </div>
 
-      <div v-else>
+      <div v-else-if="currentPage === 'onThisDay'">
+        <h1 class="page-title">On This Day</h1>
         <div v-if="!onThisDayImages || onThisDayImages.length === 0" class="info-box">
           No images found for today.
         </div>
@@ -97,6 +97,23 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div v-else-if="currentPage === 'recent'">
+        <h1 class="page-title">Recent Images</h1>
+        <div class="info-box">Recent images will be displayed here</div>
+      </div>
+
+      <div v-else-if="currentPage === 'map'">
+        <h1 class="page-title">Map</h1>
+        <div class="map-container">
+          <div id="map" ref="mapContainer"></div>
+        </div>
+      </div>
+
+      <div v-else-if="currentPage === 'stats'">
+        <h1 class="page-title">Stats</h1>
+        <div class="info-box">Statistics will be displayed here</div>
       </div>
     </main>
 
@@ -149,7 +166,7 @@ import {
   dateStart,
   dateEnd,
   showMore,
-  isSearching,
+  currentPage,
   loading,
   images,
   onThisDayImages,
@@ -168,6 +185,18 @@ import {
   copyFilePath,
   setupApp
 } from './utils/app'
+import { setupMap, mapContainer, markers } from './utils/map'
+import { onMounted, watch } from 'vue'
 
 setupApp()
+
+onMounted(() => {
+  watch(currentPage, (newPage) => {
+    if (newPage === 'map') {
+      setTimeout(() => {
+        setupMap()
+      }, 100)
+    }
+  })
+})
 </script>

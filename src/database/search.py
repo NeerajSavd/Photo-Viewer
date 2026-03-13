@@ -1,7 +1,9 @@
 from geopy.geocoders import Nominatim
 from database.database import init_db 
-from database.query import query_dates, query_tags, query_coordinates, on_this_day_search, get_metadata
+from database.operations import query_dates, query_tags, query_coordinates, on_this_day_search, get_metadata, get_locations
 from datetime import datetime
+import math
+from collections import defaultdict
 
 def _get_coordinates(city):
     geolocator = Nominatim(user_agent="city_coords")
@@ -117,6 +119,42 @@ def get_image_details(image_path):
     details = get_metadata(conn, image_path)
     conn.close()
     return details
+
+def get_image_map():
+    conn = init_db()
+    rows = get_locations(conn)
+    conn.close()
+
+    # 1 degree of latitude is consistently ~69.1 miles anywhere on Earth.
+    MILES_PER_LAT_DEGREE = 69.1
+    GRID_SIZE_MILES = 20.0
+    LAT_DEG_BIN_SIZE = GRID_SIZE_MILES / MILES_PER_LAT_DEGREE
+
+    grid_counts = defaultdict(int)
+
+    for lat, lon in rows:
+        try:
+            lat = float(lat)
+            lon = float(lon)
+        except ValueError:
+            continue
+
+        lat_bin = round(lat / LAT_DEG_BIN_SIZE)
+        center_lat = lat_bin * LAT_DEG_BIN_SIZE
+
+        cos_lat = math.cos(math.radians(center_lat))
+        
+        if cos_lat < 0.01: 
+            lon_deg_bin_size = 360.0
+        else:
+            lon_deg_bin_size = GRID_SIZE_MILES / (MILES_PER_LAT_DEGREE * cos_lat)
+
+        lon_bin = round(lon / lon_deg_bin_size)
+        center_lon = lon_bin * lon_deg_bin_size
+
+        grid_counts[(center_lat, center_lon)] += 1
+
+    return [[lat, lon, count] for (lat, lon), count in grid_counts.items()]
 
 if __name__ == "__main__":
     user_query = "winter"

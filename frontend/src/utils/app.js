@@ -9,7 +9,7 @@ const city = ref('')
 const dateStart = ref('')
 const dateEnd = ref('')
 const showMore = ref(false)
-const isSearching = ref(false)
+const currentPage = ref('onThisDay') // 'onThisDay', 'search', 'recent', 'map', 'stats'
 const loading = ref(false)
 
 const images = ref([])
@@ -42,7 +42,7 @@ const loadOnThisDay = async () => {
 }
 
 const performSearch = async () => {
-  isSearching.value = true
+  currentPage.value = 'search'
   loading.value = true
   page.value = 0
   
@@ -100,7 +100,7 @@ export {
   dateStart,
   dateEnd,
   showMore,
-  isSearching,
+  currentPage,
   loading,
   images,
   onThisDayImages,

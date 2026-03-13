@@ -34,7 +34,6 @@ def query(img_path, prompt):
     # start_time = time.time()
     
     payload = {
-        "model": "qwen3-vl-2b",
         "messages": [{
             "role": "user",
             "content": [
@@ -56,8 +55,9 @@ def query(img_path, prompt):
         res_json = response.json()
         # print(f"Server responded in {time.time() - start_time:.2f} seconds.")
         return res_json['choices'][0]['message']['content']
+        # return res_json
     except Exception as e:
-        return f"Error: {str(e)}"
+        raise Exception(f"Query failed for {img_path}: {str(e)}")
 
 def _get_decimal_from_dms(dms, ref):
     degrees = dms[0]
@@ -110,12 +110,11 @@ def get_metadata(image_path):
         return {"timestamp": timestamp, "camera_model": camera_model, "latitude": lat, "longitude": lon}
 
 if __name__ == "__main__":
-    img_file = "E:\\Coding\\Image Tagging\\Test Data\\20170403_190012.jpg"
+    # img_file = "E:\\Coding\\Image Tagging\\Test Data\\IMG_9742.png"
+    img_file = "E:\\OneDrive\\Pictures\\Camera Roll\\2025\\02\\20250221_024724935_iOS.heic"
     prompt = "Return only a JSON list of 5 to 10 tags for this image."
     start_time = time.time()
-    # result = query(img_file, prompt)
-    result = get_metadata(img_file)
+    result = query(img_file, prompt)
+    # result = get_metadata(img_file)
     print("Result:", result)
     print(f"Total time: {time.time() - start_time:.2f} seconds.")
-
-    print(get_metadata(img_file))

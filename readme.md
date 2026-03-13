@@ -24,6 +24,10 @@ A photo library application with advanced search capabilities using AI-powered i
 - Python 3.13
 - Required packages (see requirements.txt)
 
+### Vision Large Language Model
+Make sure to set the concurrency limit in llama-swap if using 10+ multithreading to avoid Error 429
+    concurrencyLimit: 12
+
 ### Setup
 
 1. Install dependencies:

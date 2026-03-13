@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from typing import Optional, List, Any
 
-from database.search import search, on_this_day, get_image_details
+from database.search import search, on_this_day, get_image_details, get_image_map
 
 register_heif_opener()
 
@@ -62,6 +62,11 @@ def get_image(path: str, size: Optional[str] = "thumb"):
             return Response(content=buf.getvalue(), media_type="image/jpeg")
     except Exception as e:
         return {"error": str(e)}
+
+@app.get("/api/map")
+def get_map():
+    return {"data": get_image_map()}
+
 
 if __name__ == "__main__":
     import uvicorn
