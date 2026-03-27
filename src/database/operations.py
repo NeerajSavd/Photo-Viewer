@@ -1,5 +1,4 @@
 import os
-import sqlite3
 
 # Insertion 
 
@@ -28,28 +27,38 @@ def check_image_exists(conn, filepath):
 
 # Deletion 
 
-def remove_deleted_images(conn):
+def clean_up_images(conn):
     c = conn.cursor()
+    # Remove images with no metadata (timestamp, latitude, longitude, camera_model are all NULL)
+    c.execute("""
+        DELETE FROM images
+        WHERE id IN (
+            SELECT id FROM images
+            WHERE timestamp IS 'Unknown'
+        )
+    """)
+    # Remove images with no tags
+    c.execute("""
+        DELETE FROM images
+        WHERE id NOT IN (SELECT DISTINCT id FROM tags)
+    """)
+    # Remove orphaned tags (tags referencing non-existent images)
+    c.execute("""
+        DELETE FROM tags
+        WHERE id NOT IN (SELECT id FROM images)
+    """)
+    # Remove images that no longer exist
     c.execute("SELECT filepath FROM images")
     for row in c.fetchall():
         if not os.path.exists(row[0]):
+            c.execute("DELETE FROM TAGS WHERE id = (SELECT id FROM images WHERE filepath = ?)", (row[0],))
             c.execute("DELETE FROM images WHERE filepath = ?", (row[0],))
     conn.commit()
 
 def delete_image(conn, filepath):
-    """Delete an image and its associated tags from the database."""
     c = conn.cursor()
-    # First delete tags associated with this image
     c.execute("DELETE FROM tags WHERE id = (SELECT id FROM images WHERE filepath = ?)", (filepath,))
-    # Then delete the image
     c.execute("DELETE FROM images WHERE filepath = ?", (filepath,))
-    conn.commit()
-
-def delete_folder(conn, folder_path):
-    c = conn.cursor()
-    c.execute("SELECT filepath FROM images WHERE filepath LIKE ?", (folder_path + "%",))
-    c.execute("DELETE FROM images WHERE filepath LIKE ?", (folder_path + "%",))
-    print(f"Deleted {len(c.fetchall())} images from folder: {folder_path}")
     conn.commit()
 
 # Queries
@@ -58,18 +67,6 @@ def query_dates(conn, dateStart = None, dateEnd = None):
     c = conn.cursor()
     c.execute("""SELECT filepath, timestamp FROM images WHERE (timestamp BETWEEN ? AND ?)""", (dateStart, dateEnd))
     return c.fetchall()
-
-def on_this_day_search(conn, month, day):
-    c = conn.cursor()
-    images = []
-    for y in range(2100, 2000, -1):
-        c.execute("""SELECT filepath FROM images WHERE timestamp = ?""", (f"{y}-{month}-{day}",))
-        rows = c.fetchall()
-        if rows:
-            images.append([y, []])
-            for row in rows:
-                images[-1][1].append(row[0])
-    return images
 
 def query_coordinates(conn, latMin, latMax, lonMin, lonMax):
     c = conn.cursor()
@@ -98,6 +95,18 @@ def query_tags(conn, tags):
                 HAVING COUNT(DISTINCT tags.tag) = ?
             """, (*tags, len(tags)))
     return c.fetchall()
+
+def get_on_this_day(conn, month, day):
+    c = conn.cursor()
+    images = []
+    for y in range(2100, 2000, -1):
+        c.execute("""SELECT filepath FROM images WHERE timestamp = ?""", (f"{y}-{month}-{day}",))
+        rows = c.fetchall()
+        if rows:
+            images.append([y, []])
+            for row in rows:
+                images[-1][1].append(row[0])
+    return images
 
 def get_metadata(conn, image_path):
     c = conn.cursor()
@@ -128,4 +137,71 @@ def get_locations(conn):
     """
     cursor.execute(query)
     return cursor.fetchall()
-    
+
+def get_recent_images(conn, limit=50):
+    c = conn.cursor()
+    query = """
+        SELECT filepath
+        FROM images
+        ORDER BY timestamp DESC
+        LIMIT ?
+    """
+    c.execute(query, (limit,))
+    return c.fetchall()
+
+def get_total_image_stats(conn):
+    output = {}
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM images")
+    output["Total images"] = c.fetchone()[0]
+
+    c.execute("""
+        SELECT AVG(tag_count) as avg_tags
+        FROM (
+            SELECT COUNT(*) as tag_count
+            FROM tags
+            GROUP BY id
+        )
+    """)
+    row = c.fetchone()
+    output["Average tags per image"] = round(row[0], 2)
+
+    c.execute("SELECT COUNT(DISTINCT tag) FROM tags")
+    output["Unique tags"] = c.fetchone()[0]
+    return output
+
+def get_most_common_tags(conn, limit=10):
+    c = conn.cursor()
+    c.execute("""
+        SELECT tags.tag, COUNT(*) as count
+        FROM tags
+        GROUP BY tags.tag
+        ORDER BY count DESC
+        LIMIT ?
+    """, (limit,))
+    return c.fetchall()
+
+def get_images_per_year(conn):
+    c = conn.cursor()
+    c.execute("""
+        SELECT strftime('%Y', timestamp) as year, COUNT(*) as count
+        FROM images
+        WHERE timestamp IS NOT NULL AND timestamp != 'Unknown'
+        GROUP BY year
+        ORDER BY year DESC
+    """)
+    return c.fetchall()
+
+def get_images_per_camera(conn):
+    c = conn.cursor()
+    c.execute("""
+        SELECT camera_model, COUNT(*) as count
+        FROM images
+        WHERE camera_model IS NOT NULL AND camera_model != 'Unknown'
+        GROUP BY camera_model
+        ORDER BY count DESC
+    """)
+    return c.fetchall()
+
+if __name__ == "__main__":
+    from database import init_db

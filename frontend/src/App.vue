@@ -2,6 +2,10 @@
   <div class="app-layout">
     <aside class="sidebar">
       <nav class="sidebar-nav">
+        <a href="#" class="nav-item" @click.prevent="currentPage = 'library'">
+          <i class="fa fa-folder nav-icon"></i>
+          <span class="nav-text">Library</span>
+        </a>
         <a href="#" class="nav-item" @click.prevent="currentPage = 'onThisDay'">
           <i class="fa fa-calendar nav-icon"></i>
           <span class="nav-text">On This Day</span>
@@ -9,10 +13,6 @@
         <a href="#" class="nav-item" @click.prevent="currentPage = 'search'">
           <i class="fa fa-search nav-icon"></i>
           <span class="nav-text">Search</span>
-        </a>
-        <a href="#" class="nav-item" @click.prevent="currentPage = 'recent'">
-          <i class="fa fa-folder nav-icon"></i>
-          <span class="nav-text">Recent</span>
         </a>
         <a href="#" class="nav-item" @click.prevent="currentPage = 'map'">
           <i class="fa fa-map nav-icon"></i>
@@ -51,12 +51,6 @@
         </div>
         <div v-else>
           <div class="pagination">
-            <button @click="currentPage = 'onThisDay'" class="btn-nav btn-back">
-              <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M15 18l-6-6 6-6"/>
-              </svg>
-              <span>Back</span>
-            </button>
             <div class="pagination-center">
               <button @click="page--" :disabled="page === 0" class="btn-nav">
                 <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -84,8 +78,20 @@
 
       <div v-else-if="currentPage === 'onThisDay'">
         <h1 class="page-title">On This Day</h1>
+        <div class="date-buttons-container">
+          <button
+            v-for="day in past7Days"
+            :key="day.date"
+            @click="selectDate(day.date)"
+            :class="{ 'active': isSelectedDate(day.date) }"
+            class="date-btn"
+          >
+            <div class="date-day">{{ day.dayName }}</div>
+            <div class="date-full">{{ day.fullDate }}</div>
+          </button>
+        </div>
         <div v-if="!onThisDayImages || onThisDayImages.length === 0" class="info-box">
-          No images found for today.
+          No images found for the selected date.
         </div>
         <div v-else class="on-this-day-list">
           <div v-for="yearData in onThisDayImages" :key="yearData[0]" class="year-section">
@@ -99,9 +105,16 @@
         </div>
       </div>
 
-      <div v-else-if="currentPage === 'recent'">
-        <h1 class="page-title">Recent Images</h1>
-        <div class="info-box">Recent images will be displayed here</div>
+      <div v-else-if="currentPage === 'library'">
+        <h1 class="page-title">Library</h1>
+        <div v-if="recentImages.length === 0" class="info-box">
+          No recent images found.
+        </div>
+        <div v-else class="image-grid">
+          <div v-for="imgPath in recentImages" :key="imgPath" class="image-card" @click="loadDetails(imgPath)">
+            <img :src="getImageUrl(imgPath)" loading="lazy" />
+          </div>
+        </div>
       </div>
 
       <div v-else-if="currentPage === 'map'">
@@ -113,7 +126,27 @@
 
       <div v-else-if="currentPage === 'stats'">
         <h1 class="page-title">Stats</h1>
-        <div class="info-box">Statistics will be displayed here</div>
+        <div class="stats-container">
+          <div v-for="(value, key) in libraryStats" :key="key" class="stats-section">
+            <h3>{{ formatStatKey(key) }}</h3>
+            <div v-if="Array.isArray(value)" class="list-container">
+              <span v-for="(item, idx) in value" :key="idx" class="list-item">
+                {{ formatStatValue(item) }}
+              </span>
+            </div>
+            <div v-else-if="typeof value === 'object'" class="object-container">
+              <span v-for="(val, k) in value" :key="k" class="object-item">
+                {{ k }}: {{ val }}
+              </span>
+            </div>
+            <div v-else class="value-container">
+              {{ value }}
+            </div>
+          </div>
+        </div>
+        <button @click="syncLibrary" class="btn-primary" :disabled="loading">
+          {{ loading ? 'Syncing...' : 'Sync' }}
+        </button>
       </div>
     </main>
 
@@ -138,7 +171,7 @@
             <strong>Timestamp:</strong> {{ currentDetails.timestamp || 'N/A' }}
           </div>
           <div class="detail-item">
-            <strong>Camera Model:</strong> {{ currentDetails.camera_model || 'N/A' }}
+            <strong>Camera:</strong> {{ currentDetails.camera_model || 'N/A' }}
           </div>
           <div class="detail-item">
             <strong>Latitude:</strong> {{ currentDetails.latitude || 'N/A' }}
@@ -168,22 +201,28 @@ import {
   showMore,
   currentPage,
   loading,
+  statsLoading,
+  libraryStats,
   images,
   onThisDayImages,
+  recentImages,
   page,
-  IMAGES_PER_PAGE,
   currentImage,
   currentDetails,
   showDetails,
   totalPages,
   paginatedImages,
   getImageUrl,
-  loadOnThisDay,
   performSearch,
   loadDetails,
   closeModal,
   copyFilePath,
-  setupApp
+  loadStats,
+  syncLibrary,
+  setupApp,
+  past7Days,
+  selectDate,
+  isSelectedDate
 } from './utils/app'
 import { setupMap, mapContainer, markers } from './utils/map'
 import { onMounted, watch } from 'vue'
@@ -196,7 +235,20 @@ onMounted(() => {
       setTimeout(() => {
         setupMap()
       }, 100)
+    } else if (newPage === 'stats') {
+      loadStats()
     }
   })
 })
+
+const formatStatKey = (key) => {
+  return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+}
+
+const formatStatValue = (item) => {
+  if (Array.isArray(item)) {
+    return `${item[0]} (${item[1]})`
+  }
+  return item
+}
 </script>

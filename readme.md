@@ -56,14 +56,10 @@ cd frontend && npm run dev
 ```
 
 ## TODO
-- Map view
-- Visual tag frequency display
-- Recent photos
 - Location radius
 - Smart suggestions
 - Fuzzy search/semantic search
 - Edit tags manually
-- Remove tags from deleted images
 - Smart albums
 - Folder management
 - Image sorting

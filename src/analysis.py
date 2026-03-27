@@ -16,6 +16,18 @@ register_heif_opener()
 server_url = os.getenv("VISION_MODEL_URL")
 session = requests.Session()
 
+def test_endpoint(timeout=10):
+    try:
+        response = session.get(server_url, timeout=timeout)
+        if 200 <= response.status_code < 300:
+            return True
+        return False
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+            requests.exceptions.RequestException):
+        return False
+    except Exception:
+        return False
+
 def encode_image(img):
     img.thumbnail((336, 336))
     buffer = io.BytesIO()
@@ -72,7 +84,7 @@ def get_metadata(image_path):
     with Image.open(image_path) as img:
         exif_data = img.getexif()
         if not exif_data:
-            return {"timestamp": '', "camera_model": '', "latitude": '', "longitude": ''}
+            raise Exception("No EXIF data found")
         
         timestamp, camera_model = '', ''
         if image_path.lower().endswith('.png'):
@@ -88,9 +100,11 @@ def get_metadata(image_path):
                     if camera_model:
                         camera_model = camera_model.group(1)
         else:
-            timestamp = exif_data.get(36867) or exif_data.get(306) or "Unknown"
+            timestamp = exif_data.get(36867) or exif_data.get(306) or ""
             timestamp = timestamp.replace(':', '-', 2).split(' ')[0]
-            camera_model = exif_data.get(272) or "Unknown"
+            camera_model = exif_data.get(272) or ""
+        if not timestamp:
+            raise Exception("No timestamp found")
 
         gps_info = {}
         for tag_id in exif_data:

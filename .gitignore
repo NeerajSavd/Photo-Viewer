@@ -5,6 +5,7 @@ __pycache__
 .env
 folders.txt
 src/old/
+resources.md
 
 .vscode
 

@@ -2,13 +2,12 @@ import os
 import io
 from PIL import Image, ImageOps
 from pillow_heif import register_heif_opener
-from fastapi import FastAPI, Query, Response
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from pydantic import BaseModel
-from typing import Optional, List, Any
-
-from database.search import search, on_this_day, get_image_details, get_image_map
+from typing import Optional
+import uvicorn
+from database.search import search, on_this_day, image_details, image_map, recent_images, library_stats
+from image_tagging import run_analysis
 
 register_heif_opener()
 
@@ -22,9 +21,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.post("/api/sync")
+def api_sync():
+    try:
+        run_analysis()
+    except:
+        return {"error": "Sync failed"}
+    return {"message": "Sync successful"}
+
+@app.get("/api/recent")
+def api_recent():
+    return {"data": recent_images()}
+
 @app.get("/api/on-this-day")
-def api_on_this_day():
-    return {"data": on_this_day()}
+def api_on_this_day(date: Optional[str] = None):
+    return {"data": on_this_day(date)}
+
+@app.get("/api/map")
+def get_map():
+    return {"data": image_map()}
+
+@app.get("/api/stats")
+def api_stats():
+    return {"data": library_stats()}
 
 @app.get("/api/search")
 def api_search(
@@ -38,7 +57,7 @@ def api_search(
 
 @app.get("/api/details")
 def api_details(path: str):
-    details = get_image_details(path)
+    details = image_details(path)
     return {"data": details}
 
 @app.get("/api/image")
@@ -63,11 +82,5 @@ def get_image(path: str, size: Optional[str] = "thumb"):
     except Exception as e:
         return {"error": str(e)}
 
-@app.get("/api/map")
-def get_map():
-    return {"data": get_image_map()}
-
-
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

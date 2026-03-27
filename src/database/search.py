@@ -1,6 +1,6 @@
 from geopy.geocoders import Nominatim
-from database.database import init_db 
-from database.operations import query_dates, query_tags, query_coordinates, on_this_day_search, get_metadata, get_locations
+from database.database import init_db
+from database.operations import *
 from datetime import datetime
 import math
 from collections import defaultdict
@@ -107,20 +107,30 @@ def search(tags, location, dateStart, dateEnd):
     image_paths = [row[0] for row in image_paths]
     return image_paths
 
-def on_this_day():
+def on_this_day(date: str = None):
     conn = init_db()
-    today = datetime.now().strftime("%Y-%m-%d").split('-')
-    images = on_this_day_search(conn, today[1], today[2])
+    if date is None:
+        today = datetime.now().strftime("%Y-%m-%d").split('-')
+    else:
+        parts = date.split('/')
+        today = [datetime.now().year, parts[0], parts[1]]
+    images = get_on_this_day(conn, today[1], today[2])
     conn.close()
     return images
 
-def get_image_details(image_path):
+def recent_images():
+    conn = init_db()
+    images = get_recent_images(conn, 50)
+    conn.close()
+    return images
+
+def image_details(image_path):
     conn = init_db()
     details = get_metadata(conn, image_path)
     conn.close()
     return details
 
-def get_image_map():
+def image_map():
     conn = init_db()
     rows = get_locations(conn)
     conn.close()
@@ -155,6 +165,17 @@ def get_image_map():
         grid_counts[(center_lat, center_lon)] += 1
 
     return [[lat, lon, count] for (lat, lon), count in grid_counts.items()]
+
+def library_stats():
+    conn = init_db()
+    stats = {
+        "total_images": get_total_image_stats(conn),
+        "most_common_tags": get_most_common_tags(conn, 10),
+        "images_per_year": get_images_per_year(conn),
+        "images_per_camera": get_images_per_camera(conn),
+    }
+    conn.close()
+    return stats
 
 if __name__ == "__main__":
     user_query = "winter"
